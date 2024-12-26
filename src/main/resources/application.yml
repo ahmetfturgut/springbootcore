@@ -1,0 +1,33 @@
+server:
+  port: 9090
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/springdb
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+    timeout: 6000ms # Zaman aşımı
+    lettuce:
+      pool:
+        max-active: 8 # Maksimum aktif bağlantı
+        max-idle: 8 # Maksimum boşta bağlantı
+        min-idle: 0 # Minimum boşta bağlantı
+        max-wait: -1ms # Bağlantı için maksimum bekleme süresi
+
+auth:
+  app:
+    jwtSecret: secretkeysecretkeysecretkeysecretkeysecretkey
+    verifyEmailExpiresIn: 86400000
+    verifySignUpExpiresIn: 86400000
+    verifySignInExpiresIn: 86400000
+    verifyPasswordExpiresIn: 86400000
+    authExpiresIn: 86400000
