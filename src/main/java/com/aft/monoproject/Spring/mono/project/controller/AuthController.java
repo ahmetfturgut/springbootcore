@@ -3,6 +3,7 @@ package com.aft.monoproject.Spring.mono.project.controller;
 import com.aft.monoproject.Spring.mono.project.dto.ApiResponse;
 import com.aft.monoproject.Spring.mono.project.dto.user.request.CreateUserRequestDto;
 import com.aft.monoproject.Spring.mono.project.dto.user.request.SignInRequestDto;
+import com.aft.monoproject.Spring.mono.project.dto.user.request.VerifyEmailUpdateRequestDto;
 import com.aft.monoproject.Spring.mono.project.dto.user.request.VerifySignUpRequestDto;
 import com.aft.monoproject.Spring.mono.project.dto.user.response.CreateUserResponseDto;
 import com.aft.monoproject.Spring.mono.project.dto.user.response.VerifySignInResponseDto;
@@ -36,6 +37,13 @@ public class AuthController {
     public ApiResponse<String> verifySignUp(@Valid @RequestBody VerifySignUpRequestDto requestDto) {
         authService.verifySignUp(requestDto.getToken(), requestDto.getCode());
         return new ApiResponse<>("User sign-up successfully verified.");
+    }
+
+    @Operation(summary = "Verify updated email", description = "Verifies the user's updated email address using a token and verification code.")
+    @PostMapping("/verifyemailupdate")
+    public ApiResponse<String> verifyEmailUpdate(@Valid @RequestBody VerifyEmailUpdateRequestDto requestDto) {
+        authService.verifyEmailUpdate(requestDto.getToken(), requestDto.getVerificationCode());
+        return new ApiResponse<>("Email successfully verified.");
     }
 
     @PostMapping("/signin")

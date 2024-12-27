@@ -28,7 +28,7 @@ public class ApiError {
     public static ApiError INVALID_VERIFICATION_CODE = new ApiError(108, "Wrong verification code.");
     public static ApiError VERIFICATION_TOKEN_NOT_FOUND = new ApiError(109, "Verification token not found.");
     public static ApiError INVALID_CREDENTIALS = new ApiError(110, "Invalid credentials.");
-
+    public static ApiError ACCESS_DENIED = new ApiError(110, "Access denied.");
 
     // USER
     public static ApiError USER_EXISTS = new ApiError(201, "User exists.");

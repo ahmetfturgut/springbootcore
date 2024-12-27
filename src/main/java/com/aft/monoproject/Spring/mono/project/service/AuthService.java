@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.Random;
 
 @Service
@@ -24,7 +25,6 @@ import java.util.Random;
 public class AuthService {
     private final AuthRepository authRepository;
     private final UserRepository userRepository;
-    private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthConfigProperties authConfigProperties;
@@ -38,10 +38,37 @@ public class AuthService {
         return authRepository.save(auth);
     }
 
+    public void verifyEmailUpdate(String token, String verificationCode) {
+        String email = jwtService.extractUsername(token);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ApiException(ApiError.USER_NOT_FOUND));
+
+        Auth auth = authRepository.findById("userId:" + user.getId() + "authType:" + AuthType.EMAIL_UPDATE)
+                .orElseThrow(() -> new ApiException(ApiError.TOKEN_ERROR));
+
+        if (!auth.getAuthType().equals(AuthType.EMAIL_UPDATE)) {
+            throw new ApiException(ApiError.TOKEN_ERROR);
+        }
+
+        if (!auth.getVerificationCode().equals(verificationCode)) {
+            throw new ApiException(ApiError.INVALID_VERIFICATION_CODE);
+        }
+
+        if (auth.getExpiresIn().before(new Date())) {
+            throw new ApiException(ApiError.TOKEN_EXPIRED);
+        }
+
+        user.setState(UserState.ACTIVE);
+        userRepository.save(user);
+        authRepository.delete(auth);
+    }
+
+
+
     public void verifySignUp(String token, String verificationCode) {
 
         String userEmail = jwtService.extractUsername(token);
-        User user = userService.getUserByEmail(userEmail);
+        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new ApiException(ApiError.USER_NOT_FOUND));
 
         Auth auth = authRepository.findById("userId:" + user.getId() + "authType:" + AuthType.SIGNUP)
                 .orElseThrow(() -> new ApiException(ApiError.USER_NOT_FOUND));
@@ -54,10 +81,19 @@ public class AuthService {
             throw new ApiException(ApiError.TOKEN_EXPIRED);
         }
 
-        userService.verifyUser(auth.getUserId());
+        user.setState(UserState.ACTIVE);
+        userRepository.save(user);
 
         authRepository.delete(auth);
     }
+
+    public void initiateEmailUpdateVerification(User user) {
+        String code = generateVerificationCode();
+        String token = jwtService.generateToken(user, AuthType.EMAIL_UPDATE, authConfigProperties.getVerifySignUpExpiresIn());
+        Auth auth = createAuth(user, token, AuthType.EMAIL_UPDATE, authConfigProperties.getVerifySignUpExpiresIn(), code);
+        authRepository.save(auth);
+    }
+
 
     public VerifySignInResponseDto signin(User user) {
         User existingUser = userRepository.findByEmail(user.getEmail())
@@ -101,6 +137,11 @@ public class AuthService {
         auth.setAuthType(authType);
         auth.setVerificationCode(verificationCode);
         return auth;
+    }
+
+    public void singOut(Integer userId) {
+        Auth auth = authRepository.findById("userId:" + userId + "authType:" + AuthType.SIGNIN).orElseThrow(() -> new ApiException(ApiError.USER_NOT_FOUND));
+        authRepository.delete(auth);
     }
 
     private String generateAuthId(User user, AuthType authType) {
