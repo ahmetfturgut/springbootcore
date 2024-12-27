@@ -63,10 +63,7 @@ public class AuthService {
         authRepository.delete(auth);
     }
 
-
-
     public void verifySignUp(String token, String verificationCode) {
-
         String userEmail = jwtService.extractUsername(token);
         User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new ApiException(ApiError.USER_NOT_FOUND));
 
@@ -93,7 +90,6 @@ public class AuthService {
         Auth auth = createAuth(user, token, AuthType.EMAIL_UPDATE, authConfigProperties.getVerifySignUpExpiresIn(), code);
         authRepository.save(auth);
     }
-
 
     public VerifySignInResponseDto signin(User user) {
         User existingUser = userRepository.findByEmail(user.getEmail())
@@ -125,6 +121,39 @@ public class AuthService {
                 .token(token)
                 .authendicatedUserResponseDto(authenticatedUser)
                 .build();
+    }
+
+    public void verifyPasswordReset(String token, String verificationCode, String newPassword) {
+        String email = jwtService.extractUsername(token);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ApiException(ApiError.USER_NOT_FOUND));
+
+        Auth auth = authRepository.findById("userId:" + user.getId() + "authType:" + AuthType.PASSWORD_RESET)
+                .orElseThrow(() -> new ApiException(ApiError.TOKEN_ERROR));
+
+        if (!auth.getVerificationCode().equals(verificationCode)) {
+            throw new ApiException(ApiError.INVALID_VERIFICATION_CODE);
+        }
+
+        if (auth.getExpiresIn().before(new Date())) {
+            throw new ApiException(ApiError.TOKEN_EXPIRED);
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        authRepository.delete(auth);
+    }
+
+    public void initiatePasswordReset(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ApiException(ApiError.USER_NOT_FOUND));
+
+        String code = generateVerificationCode();
+        String token = jwtService.generateToken(user, AuthType.PASSWORD_RESET, authConfigProperties.getVerifySignUpExpiresIn());
+
+        Auth auth = createAuth(user, token, AuthType.PASSWORD_RESET, authConfigProperties.getVerifySignUpExpiresIn(), code);
+        authRepository.save(auth);
     }
 
     private Auth createAuth(User user, String token, AuthType authType, long expiresIn, String verificationCode) {

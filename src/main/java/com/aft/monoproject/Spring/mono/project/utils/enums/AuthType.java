@@ -6,7 +6,7 @@ public enum AuthType {
     VERIFY_SIGNIN,
     SIGNIN,
     SIGNUP,
-    RESET_PASSWORD,
+    PASSWORD_RESET,
     PASSWORD,
     EMAIL_UPDATE
 }

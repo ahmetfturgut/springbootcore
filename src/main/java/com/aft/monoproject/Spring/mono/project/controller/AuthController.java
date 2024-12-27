@@ -1,10 +1,7 @@
 package com.aft.monoproject.Spring.mono.project.controller;
 
 import com.aft.monoproject.Spring.mono.project.dto.ApiResponse;
-import com.aft.monoproject.Spring.mono.project.dto.user.request.CreateUserRequestDto;
-import com.aft.monoproject.Spring.mono.project.dto.user.request.SignInRequestDto;
-import com.aft.monoproject.Spring.mono.project.dto.user.request.VerifyEmailUpdateRequestDto;
-import com.aft.monoproject.Spring.mono.project.dto.user.request.VerifySignUpRequestDto;
+import com.aft.monoproject.Spring.mono.project.dto.user.request.*;
 import com.aft.monoproject.Spring.mono.project.dto.user.response.CreateUserResponseDto;
 import com.aft.monoproject.Spring.mono.project.dto.user.response.VerifySignInResponseDto;
 import com.aft.monoproject.Spring.mono.project.entity.Auth;
@@ -51,6 +48,20 @@ public class AuthController {
         User user = requestDto.toUser();
         VerifySignInResponseDto response = authService.signin(user);
         return new ApiResponse<>(response);
+    }
+
+    @Operation(summary = "Forgot Password", description = "Initiates a password reset process for the user by sending a verification code.")
+    @PostMapping("/forgotpassword")
+    public ApiResponse<String> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDto requestDto) {
+        authService.initiatePasswordReset(requestDto.getEmail());
+        return new ApiResponse<>("Password reset initiated. Check your email for the verification code.");
+    }
+
+    @Operation(summary = "Verify Password Reset", description = "Verifies the password reset request using the token and verification code provided.")
+    @PostMapping("/verifypasswordreset")
+    public ApiResponse<String> verifyPasswordReset(@Valid @RequestBody VerifyPasswordResetRequestDto requestDto) {
+        authService.verifyPasswordReset(requestDto.getToken(), requestDto.getVerificationCode(), requestDto.getNewPassword());
+        return new ApiResponse<>("Password reset successfully verified.");
     }
 
 }
