@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Data
 @Component
-@ConfigurationProperties(prefix = "auth.config")
+@ConfigurationProperties(prefix = "auth.app")
 public class AuthConfigProperties {
     private String jwtSecret;
     private Integer verifyEmailExpiresIn;
